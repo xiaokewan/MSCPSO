@@ -1,4 +1,4 @@
-﻿% Algorithm MSCPSO
+% Algorithm MSCPSO
 %%----------------pseudo_code------------
 % Begin
 	% Select the size of paprticles for each subswarm
@@ -39,9 +39,13 @@ close all;
     wmax = 0.9;
     wmin = 0.4;
     w = wmax;
-    c1 = 2;
-    c2 = 2;
-    nPop = 50 ;
+	% parameters to calculate average fitness value
+
+	fsum = 0;
+
+    c1 = 1.7;
+    c2 = 2.05;
+    nPop = 20 ;
     MaxIt = 100;
 	alfa1= 1/6;
 	alfa2= 1/3;
@@ -97,10 +101,21 @@ end
 
 
  for it=1:MaxIt
+	
+	% calculate average fitness value
+	for j=1:4
+		for i = 1:nPop
+		fsum = fsum + slave_particle(i,j).Cost;
+		end
+	end
+	favg = fsum/4*nPop;
+	fmin = GlobalBest.Cost;
+ 
+ 
     % sub-swarm1 and sub-swarm2
 	for j = 1:2
 		for i=1:nPop
-
+            w = adaptiveInertia(slave_particle(i,j).Cost,favg,wmax,wmin,fmin);
 			% Update Velocity
 			slave_particle(i,j).Velocity = w*slave_particle(i,j).Velocity ...
 				+ c1*rand(VarSize).*(slave_particle(i,j).Best.Position - slave_particle(i,j).Position) ...
@@ -142,6 +157,7 @@ end
 	% sub-swarm3
 	for i=1:nPop
 			j = 3;
+			w = adaptiveInertia(slave_particle(i,j).Cost,favg,wmax,wmin,fmin);
 			% Update Velocity
 			%slave_particle(i,j).Velocity = w*slave_particle(i,j).Velocity ...
 			%	+ c1*rand(VarSize).*(slave_particle(i,j).Best.Position - slave_particle(i,j).Position) ...
@@ -226,6 +242,10 @@ end
 		end
     end
     
+
+
+	
+	
     BestCosts(it) = GlobalBest.Cost;
     % Display Iteration Information
     if ShowIterInfo
@@ -242,6 +262,22 @@ end
     xlabel('Iteration');
     ylabel('Best Cost');
 %end %end function        
+	
+function y = adaptiveInertia(x,favg,wmax,wmin,fmin)	
+	%%
+    if x >= favg
+    %stage1
+    w = wmax;
 
+    elseif favg/2<=x<favg
+    %stage2
+    w = wmin+(x-fmin)*(wmax-wmin)/((favg/2)-fmin);
 
+    elseif x <favg/2
+    %stage3
+    w = wmax-it*((wmax-wmin)/MaxIt);
+    end
+    
+    y=w;%%
+end
 
